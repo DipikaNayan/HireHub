@@ -137,4 +137,38 @@ const deleteJob = async (req, res) => {
     });
   }
 };
-module.exports = { createJob, getAllJobs, getJobById, updateJob, deleteJob };
+
+const getMyJobs = async (req, res) => {
+  if (req.user.role !== "recruiter") {
+    return res.status(403).json({
+      message: "Access denied. Recruiters only.",
+    });
+  }
+  try {
+    const recruiterId = req.user.id;
+
+    const jobs = await Job.find({
+      recruiter: recruiterId,
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      message: "Jobs fetched successfully",
+      totalJobs: jobs.length,
+      jobs,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+module.exports = {
+  createJob,
+  getAllJobs,
+  getJobById,
+  updateJob,
+  deleteJob,
+  getMyJobs,
+};

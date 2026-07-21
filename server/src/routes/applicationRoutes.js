@@ -1,0 +1,18 @@
+const express = require("express");
+const router = express.Router();
+
+const {
+  applyJob,
+  getMyApplications,
+  withdrawApplication,
+  getApplicantsForJob,
+  updateApplicationStatus,
+} = require("../controllers/applicationController.js");
+const verifyToken = require("../middlewares/authMiddleware.js");
+
+router.post("/:jobId", verifyToken, applyJob);
+router.get("/my", verifyToken, getMyApplications);
+router.delete("/:applicationId", verifyToken, withdrawApplication);
+router.get("/job/:jobId", verifyToken, getApplicantsForJob);
+router.patch("/:applicationId/status", verifyToken, updateApplicationStatus);
+module.exports = router;
