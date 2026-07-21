@@ -51,11 +51,51 @@ const createJob = async (req, res) => {
 
 const getAllJobs = async (req, res) => {
   try {
-    const jobs = await Job.find().populate("recruiter", "fullName email role");
+    //const { keyword } = req.query;
+    const {
+      keyword,
+      location,
+      jobType,
+      experience,
+      page = 1,
+      limit = 10,
+      sort,
+    } = req.query;
+
+    let filter = {};
+    if (keyword) {
+      filter = {
+        $or: [
+          { title: { $regex: keyword, $options: "i" } },
+          { company: { $regex: keyword, $options: "i" } },
+          { location: { $regex: keyword, $options: "i" } },
+        ],
+      };
+    }
+
+    const totalJobs = await Job.countDocuments(filter);
+    let sortOption = { createdAt: -1 };
+
+    if (sort === "salary") {
+      sortOption = { salary: -1 };
+    }
+
+    if (sort === "latest") {
+      sortOption = { createdAt: -1 };
+    }
+
+    const skip = (page - 1) * limit;
+
+    const jobs = await Job.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit));
 
     res.status(200).json({
       message: "Jobs fetched successfully",
-      totalJobs: jobs.length,
+      totalJobs,
+      currentPage: Number(page),
+      totalPages: Math.ceil(totalJobs / limit),
       jobs,
     });
   } catch (error) {
@@ -164,6 +204,7 @@ const getMyJobs = async (req, res) => {
     });
   }
 };
+
 module.exports = {
   createJob,
   getAllJobs,
