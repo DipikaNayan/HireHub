@@ -1,6 +1,8 @@
 const User = require("../models/user.js");
 const bcrypt = require("bcryptjs");
 const path = require("path");
+const cloudinary = require("../config/cloudinary.js");
+const fs = require("fs-extra");
 
 const getProfile = async (req, res) => {
   try {
@@ -149,7 +151,16 @@ const uploadResume = async (req, res) => {
         message: "User not found",
       });
     }
-    user.resume = req.file.path;
+
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      resource_type: "raw",
+      folder: "HireHub/resumes",
+    });
+    user.resume = result.secure_url;
+
+    await fs.remove(req.file.path);
+
+    console.log("Deleted:", req.file.path);
 
     await user.save();
 
@@ -194,10 +205,75 @@ const deleteResume = async (req, res) => {
     });
   }
 };
+
+const uploadProfilePicture = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        message: "Please upload an image",
+      });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "HireHub/profilePictures",
+    });
+
+    user.profilePicture = result.secure_url;
+
+    await fs.remove(req.file.path);
+    console.log("Deleted:", req.file.path);
+
+    await user.save();
+
+    res.status(200).json({
+      message: "Profile picture uploaded successfully",
+      profilePicture: user.profilePicture,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+const deleteProfilePicture = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+
+    if (!user.profilePicture) {
+      return res.status(404).json({
+        message: "No profile picture upload",
+      });
+    }
+    user.profilePicture = "";
+    await user.save();
+
+    res.status(200).json({
+      message: "Profile picture deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
   getProfile,
   updateProfile,
   changePassword,
   uploadResume,
   deleteResume,
+  uploadProfilePicture,
+  deleteProfilePicture,
 };

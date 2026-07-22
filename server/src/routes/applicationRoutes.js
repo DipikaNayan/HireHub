@@ -12,7 +12,7 @@ const verifyToken = require("../middlewares/authMiddleware.js");
 
 router.post("/:jobId", verifyToken, applyJob);
 router.get("/my", verifyToken, getMyApplications);
-router.delete("/:applicationId", verifyToken, withdrawApplication);
+router.patch("/withdraw/:applicationId", verifyToken, withdrawApplication);
 router.get("/job/:jobId", verifyToken, getApplicantsForJob);
 router.patch("/:applicationId/status", verifyToken, updateApplicationStatus);
 module.exports = router;

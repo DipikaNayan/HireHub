@@ -1,26 +1,28 @@
 const mongoose = require("mongoose");
 
-const applicationSchema = new mongoose.Schema(
+const savedJobSchema = new mongoose.Schema(
   {
     candidate: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",
       required: true,
     },
-
     job: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Job",
       required: true,
-    },
-    status: {
-      type: String,
-      enum: ["Pending", "Shortlisted", "Rejected", "withdrawn"],
-      default: "Pending",
     },
   },
   {
     timestamps: true,
   },
 );
-module.exports = mongoose.model("Application", applicationSchema);
+
+savedJobSchema.index(
+  {
+    candidate: 1,
+    job: 1,
+  },
+  { unique: true },
+);
+module.exports = mongoose.model("savedJob", savedJobSchema);

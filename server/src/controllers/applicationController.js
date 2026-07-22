@@ -1,5 +1,6 @@
 const Application = require("../models/application.js");
 const Job = require("../models/job.js");
+const Notification = require("../models/notification.js");
 
 const applyJob = async (req, res) => {
   try {
@@ -28,6 +29,13 @@ const applyJob = async (req, res) => {
     const application = await Application.create({
       candidate: candidateId,
       job: jobId,
+    });
+    const candidate = await user.findById(candidateId);
+
+    await Notification.create({
+      recipient: job.recruiter,
+      sender: candidateId,
+      message: `${candidate.fullName} applied for ${job.title}`,
     });
 
     res.status(201).json({
@@ -65,8 +73,13 @@ const getMyApplications = async (req, res) => {
 
 const withdrawApplication = async (req, res) => {
   try {
+    if (req.user.role !== "candidate") {
+      return res.status(403).json({
+        message: "Only candidates can withdraw applications",
+      });
+    }
+
     const { applicationId } = req.params;
-    const candidateId = req.user.id;
 
     const application = await Application.findById(applicationId);
 
@@ -75,15 +88,38 @@ const withdrawApplication = async (req, res) => {
         message: "Application not found",
       });
     }
-    if (application.candidate.toString() !== candidateId) {
+
+    if (application.candidate.toString() !== req.user.id) {
       return res.status(403).json({
-        message: "You can withdraw only your application",
+        message: "You can withdraw only your own application",
       });
     }
 
-    await Application.findByIdAndDelete(applicationId);
+    if (application.status === "Accepted") {
+      return res.status(400).json({
+        message: "Accepted application cannot be withdrawn",
+      });
+    }
+
+    if (application.status === "Rejected") {
+      return res.status(400).json({
+        message: "Rejected application cannot be withdrawn",
+      });
+    }
+
+    if (application.status === "Withdrawn") {
+      return res.status(400).json({
+        message: "Application already withdrawn",
+      });
+    }
+
+    application.status = "Withdrawn";
+
+    await application.save();
+
     res.status(200).json({
-      message: " Application withdrawn successfully",
+      message: "Application withdrawn successfully",
+      application,
     });
   } catch (error) {
     console.error(error);
@@ -157,6 +193,14 @@ const updateApplicationStatus = async (req, res) => {
 
     application.status = status;
     await application.save();
+
+    const job = await Job.findById(application.job);
+
+    await Notification.create({
+      recipient: application.candidate,
+      sender: req.user.id,
+      message: `Your application for "${job.title}" has been ${application.status}.`,
+    });
 
     res.status(200).json({
       message: "Application status updated successfully",

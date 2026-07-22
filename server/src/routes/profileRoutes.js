@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const upload = require("../middlewares/uploadMiddleware.js");
+const uploadImage = require("../middlewares/imageUploadMiddleware");
 
 const {
   getProfile,
@@ -8,6 +9,8 @@ const {
   changePassword,
   uploadResume,
   deleteResume,
+  uploadProfilePicture,
+  deleteProfilePicture,
 } = require("../controllers/profileController.js");
 const verifyToken = require("../middlewares/authMiddleware.js");
 
@@ -21,5 +24,12 @@ router.post(
   uploadResume,
 );
 router.delete("/resume", verifyToken, deleteResume);
+router.patch(
+  "/upload-profile-picture",
+  verifyToken,
+  uploadImage.single("profilePicture"),
+  uploadProfilePicture,
+);
+router.delete("/delete-profile-picture", verifyToken, deleteProfilePicture);
 
 module.exports = router;

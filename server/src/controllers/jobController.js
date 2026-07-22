@@ -1,4 +1,7 @@
 const Job = require("../models/job.js");
+const SavedJob = require("../models/savedJob");
+
+const mongoose = require("mongoose");
 
 const createJob = async (req, res) => {
   try {
@@ -51,7 +54,6 @@ const createJob = async (req, res) => {
 
 const getAllJobs = async (req, res) => {
   try {
-    //const { keyword } = req.query;
     const {
       keyword,
       location,
@@ -205,6 +207,116 @@ const getMyJobs = async (req, res) => {
   }
 };
 
+const saveJob = async (req, res) => {
+  try {
+    if (req.user.role !== "candidate") {
+      return res.status(403).json({
+        message: "Only candidates can save jobs",
+      });
+    }
+
+    const { jobId } = req.params;
+
+    const job = await Job.findById(jobId);
+
+    if (!job) {
+      return res.status(404).json({
+        message: "Job not found",
+      });
+    }
+
+    const alreadySaved = await SavedJob.findOne({
+      candidate: req.user.id,
+      job: jobId,
+    });
+
+    if (alreadySaved) {
+      return res.status(400).json({
+        message: "Job already saved",
+      });
+    }
+
+    const savedJob = await SavedJob.create({
+      candidate: req.user.id,
+      job: jobId,
+    });
+
+    res.status(201).json({
+      message: "Job saved successfully",
+      savedJob,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+const getSavedJobs = async (req, res) => {
+  try {
+    if (req.user.role !== "candidate") {
+      return res.status(403).json({
+        message: "Only candidates can view saved jobs",
+      });
+    }
+
+    const savedJobs = await SavedJob.find({
+      candidate: req.user.id,
+    })
+      .populate({
+        path: "job",
+        populate: {
+          path: "recruiter",
+          select: "fullName email",
+        },
+      })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      message: "Saved jobs fetched successfully",
+      totalSavedJobs: savedJobs.length,
+      savedJobs,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+const removeSavedJob = async (req, res) => {
+  try {
+    if (req.user.role !== "candidate") {
+      return res.status(403).json({
+        message: "Only candidates can remove saved jobs",
+      });
+    }
+
+    const { jobId } = req.params;
+
+    const savedJob = await SavedJob.findOneAndDelete({
+      candidate: req.user.id,
+      job: jobId,
+    });
+
+    if (!savedJob) {
+      return res.status(404).json({
+        message: "Saved job not found",
+      });
+    }
+    res.status(200).json({
+      message: "Saved job removed successfully",
+    });
+  } catch (error) {
+    (console.error(error),
+      res.status(500).json({
+        message: "Internal server error",
+      }));
+  }
+};
 module.exports = {
   createJob,
   getAllJobs,
@@ -212,4 +324,7 @@ module.exports = {
   updateJob,
   deleteJob,
   getMyJobs,
+  saveJob,
+  getSavedJobs,
+  removeSavedJob,
 };
