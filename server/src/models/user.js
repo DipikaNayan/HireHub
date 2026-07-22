@@ -27,6 +27,45 @@ const userSchema = new mongoose.Schema(
       enum: ["candidate", "recruiter"],
       default: "candidate",
     },
+    phone: {
+      type: String,
+      default: "",
+    },
+    bio: {
+      type: String,
+      default: "",
+    },
+    skills: [
+      {
+        type: String,
+      },
+    ],
+    profilePicture: {
+      type: String,
+      default: "",
+    },
+    resume: {
+      type: String,
+      default: "",
+    },
+    linkedin: {
+      type: String,
+      default: "",
+    },
+    github: {
+      type: String,
+      default: "",
+    },
+    portfolio: {
+      type: String,
+      default: true,
+    },
+    resetPasswordToken: {
+      type: String,
+    },
+    resetPasswordExpires: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
