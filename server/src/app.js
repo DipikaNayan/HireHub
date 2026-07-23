@@ -6,8 +6,16 @@ const dashboardRoutes = require("./routes/dashboardRoutes.js");
 const profileRoutes = require("./routes/profileRoutes.js");
 const notificationRoutes = require("./routes/notificationRoutes.js");
 const helmet = require("helmet");
+const cors = require("cors");
 
 const app = express();
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
 app.use(helmet());
