@@ -30,19 +30,42 @@ const Navbar = () => {
           {user ? (
             <>
               {user.role === "candidate" ? (
-                <Link
-                  to="/profile"
-                  className="text-gray-700 hover:text-blue-600 transition"
-                >
-                  Profile
-                </Link>
+                <>
+                  <Link
+                    to="/profile"
+                    className="text-gray-700 hover:text-blue-600 transition"
+                  >
+                    Profile
+                  </Link>
+
+                  <Link
+                    to="/my-applications"
+                    className="text-gray-700 hover:text-blue-600 transition"
+                  >
+                    My Applications
+                  </Link>
+                  <Link
+                    to="/saved-jobs"
+                    className="text-gray-700 hover:text-blue-600 transition"
+                  >
+                    Saved Jobs
+                  </Link>
+                </>
               ) : (
-                <Link
-                  to="/dashboard"
-                  className="text-gray-700 hover:text-blue-600 transition"
-                >
-                  Dashboard
-                </Link>
+                <>
+                  <Link
+                    to="/dashboard"
+                    className="text-gray-700 hover:text-blue-600 transition"
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/create-job"
+                    className="text-gray-700 hover:text-blue-600 transition"
+                  >
+                    Create Job
+                  </Link>
+                </>
               )}
 
               <button

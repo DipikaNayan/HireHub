@@ -1,6 +1,7 @@
 const Application = require("../models/application.js");
 const Job = require("../models/job.js");
 const Notification = require("../models/notification.js");
+const User = require("../models/user.js");
 
 const applyJob = async (req, res) => {
   try {
@@ -30,7 +31,7 @@ const applyJob = async (req, res) => {
       candidate: candidateId,
       job: jobId,
     });
-    const candidate = await user.findById(candidateId);
+    const candidate = await User.findById(candidateId);
 
     await Notification.create({
       recipient: job.recruiter,
@@ -148,7 +149,7 @@ const getApplicantsForJob = async (req, res) => {
       });
     }
     const applications = await Application.find({ job: jobId })
-      .populate("candidate", "name email")
+      .populate("candidate", "fullName email")
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -214,10 +215,31 @@ const updateApplicationStatus = async (req, res) => {
     });
   }
 };
+
+const checkApplication = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    const application = await Application.findOne({
+      candidate: req.user.id,
+      job: jobId,
+    });
+
+    res.status(200).json({
+      applied: !!application,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
 module.exports = {
   applyJob,
   getMyApplications,
   withdrawApplication,
   getApplicantsForJob,
   updateApplicationStatus,
+  checkApplication,
 };
